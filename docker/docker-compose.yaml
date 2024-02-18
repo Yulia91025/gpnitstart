@@ -8,3 +8,35 @@ services:
       POSTGRES_PASSWORD: "pass"
     ports:
       - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10      
+
+  locust-master:
+    image: locustio/locust:2.20.0
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./locust:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --master -H http://locust-master:8089 --class-picker
+  
+  locust-worker:
+    image: locustio/locust:2.20.0
+    volumes:
+      - ./locust:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --worker --master-host locust-master   
+
+  fastapi:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://user:pass@postgres/db
+    depends_on:
+      postgres:
+        condition: service_healthy           
+    container_name: fastapi_container

@@ -9,6 +9,7 @@ from alembic import context
 
 from database.base import Base
 from database.models import *
+from config import DATABASE_URL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -29,6 +30,8 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+section = config.config_ini_section
+config.set_section_option(section, "DATABASE_URL", DATABASE_URL)
 
 
 def run_migrations_offline() -> None:

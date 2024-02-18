@@ -9,7 +9,6 @@ class UserSchema(BaseModel):
 
 class DeviceSchema(BaseModel):
     id: int
-    user_id: int
 
 
 class DataSchema(BaseModel):

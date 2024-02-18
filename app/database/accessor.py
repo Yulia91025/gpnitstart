@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, update, func
+from sqlalchemy import select, insert, func
 from sqlalchemy.dialects.postgresql import insert as insert_psql
 from database.base import async_session
 from database.models import UserModel, DeviceModel, DataModel
@@ -200,14 +200,20 @@ class BaseAccessor:
 
     async def get_total_period(self) -> list[datetime]:
         data = await self.get_all_data()
+        if not data:
+            return None
         return [data[0].date, data[-1].date]
 
     async def get_device_period(self, id: int) -> list[datetime]:
         device_data = await self.get_device_data(id)
+        if not device_data:
+            return None
         return [device_data[0].date, device_data[-1].date]
 
     async def get_user_period(self, id: int) -> list[datetime]:
         user_data = await self.get_user_data(id)
+        if not user_data:
+            return None
         return [user_data[0].date, user_data[-1].date]
 
     async def get_analysis(
@@ -224,6 +230,9 @@ class BaseAccessor:
             period = await self.get_user_period(user_id)
         else:
             period = await self.get_total_period()
+
+        if not period:
+            return None
 
         if begin < period[0]:
             begin_date = period[0]

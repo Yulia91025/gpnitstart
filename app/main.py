@@ -11,7 +11,7 @@ from web.schemas import DataSchema, AnalysisSchema, UserSchema, DeviceSchema
 
 app = FastAPI()
 db = BaseAccessor()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 @app.get("/")
@@ -33,7 +33,7 @@ async def add_user(user_info: UserSchema):
     return {"id": user.id, "login": user.login, "password": user.password}
 
 
-@app.post("/token")
+@app.post("/login")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     token = await db.auth_user(form_data.username, form_data.password)
     if not token:
@@ -59,19 +59,32 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 async def add_device(
     device_info: DeviceSchema, token: Annotated[str, Depends(oauth2_scheme)]
 ):
-    user = await db.get_user(device_info.user_id)
+    user = await db.get_user_by_token(token)
     if not user:
         return Response(
-            content=f"User with id = {device_info.user_id} not found!",
-            status_code=status.HTTP_400_BAD_REQUEST,
+            content=f"User not found!",
+            status_code=status.HTTP_403_FORBIDDEN,
         )
-    device = await db.add_device(device_info.id, device_info.user_id)
+    device = await db.add_device(device_info.id, user.id)
     if not device:
         return Response(
             content=f"Device with id = {device_info.id} already exists!",
             status_code=status.HTTP_409_CONFLICT,
         )
     return {"id": device.id}
+
+
+@app.get("/devices/")
+async def get_all_devices():
+    devices = await db.get_devices()
+    if devices is None:
+        return Response(
+            content=f"No devices found.",
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+    list_id = [device.id for device in devices]
+    response = {"device_ids": list_id}
+    return response
 
 
 @app.get("/new_device_data/{id}", response_model=DataSchema)
@@ -96,6 +109,8 @@ async def device_data_analysis(
     end: datetime = datetime(9999, 12, 31, 23, 59, 59),
 ):
     analysis = await db.get_analysis(device_id, user_id, column, begin, end)
+    if not analysis:
+        return Response(content="No data yet.")
     response = dict()
     for column_analysis in analysis:
         response[column_analysis.column] = {
@@ -117,4 +132,4 @@ async def device_data_analysis(
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(init_models())
-    uvicorn.run("main:app", host="0.0.0.0", port=80, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
