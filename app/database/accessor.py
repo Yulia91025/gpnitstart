@@ -55,11 +55,9 @@ class BaseAccessor:
     async def auth_user(self, login: str, password_str: str) -> str:
         user = await self.get_user(login=login)
         if not user:
-            print(f"+++++{login}+++{password_str}+++")
             return None
         password = sha256(password_str.encode("utf-8")).hexdigest()
         if password != user.password:
-            print("!!!!!!!!!!!!!")
             return None
         payload = {"user_id": user.id, "expires": time.time() + 86400}
         token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
