@@ -26,6 +26,7 @@ class Data:
 
 @dataclass
 class Analysis:
+    column: str
     begin_date: datetime
     end_date: datetime
     min_value: float
