@@ -1,13 +1,13 @@
-import uvicorn
 import asyncio
 from datetime import datetime
 from typing import Annotated
-from fastapi import FastAPI, Response, status, Depends
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from database.base import init_models
+import uvicorn
 from database.accessor import BaseAccessor
-from web.schemas import DataSchema, AnalysisSchema, UserSchema, DeviceSchema
+from database.base import init_models
+from fastapi import Depends, FastAPI, Response, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from web.schemas import DataSchema, DeviceSchema, UserSchema
 
 app = FastAPI()
 db = BaseAccessor()
@@ -62,7 +62,7 @@ async def add_device(
     user = await db.get_user_by_token(token)
     if not user:
         return Response(
-            content=f"User not found!",
+            content="User not found!",
             status_code=status.HTTP_403_FORBIDDEN,
         )
     device = await db.add_device(device_info.id, user.id)
@@ -79,7 +79,7 @@ async def get_all_devices():
     devices = await db.get_devices()
     if devices is None:
         return Response(
-            content=f"No devices found.",
+            content="No devices found.",
             status_code=status.HTTP_404_NOT_FOUND,
         )
     list_id = [device.id for device in devices]

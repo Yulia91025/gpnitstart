@@ -1,14 +1,15 @@
-from sqlalchemy import select, insert, func
-from sqlalchemy.dialects.postgresql import insert as insert_psql
-from database.base import async_session
-from database.models import UserModel, DeviceModel, DataModel
-from database.dataclasses import User, Device, Data, Analysis
-from devices.device_simulator import SomeDevice
+import time
 from datetime import datetime
 from hashlib import sha256
+
 import jwt
-import time
-from config import JWT_SECRET, JWT_ALGORITHM
+from config import JWT_ALGORITHM, JWT_SECRET
+from database.base import async_session
+from database.dataclasses import Analysis, Data, Device, User
+from database.models import DataModel, DeviceModel, UserModel
+from devices.device_simulator import SomeDevice
+from sqlalchemy import func, insert, select
+from sqlalchemy.dialects.postgresql import insert as insert_psql
 
 
 class BaseAccessor:
